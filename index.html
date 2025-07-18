@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Yuii Store - TopUp All Game</title>
+  <style>
+    body { font-family: sans-serif; background: #111; color: white; padding: 2rem; }
+    .box { max-width: 400px; margin: auto; background: #222; padding: 2rem; border-radius: 10px; }
+    input, select, button {
+      display: block; width: 100%; margin-top: 1rem; padding: 0.5rem; border: none; border-radius: 5px;
+    }
+    button { background: #00ff99; color: black; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Yuii Store</h2>
+    <form id="topupForm">
+      <label>ID Pengguna</label>
+      <input type="text" id="user_id" required />
+
+      <label>Pilih Game</label>
+      <select id="game_id"></select>
+
+      <label>Nominal</label>
+      <select id="nominal">
+        <option value="10">10 Diamonds</option>
+        <option value="50">50 Diamonds</option>
+        <option value="100">100 Diamonds</option>
+      </select>
+
+      <label>Metode Pembayaran</label>
+      <select id="method">
+        <option value="QRIS">QRIS</option>
+        <option value="DANA">DANA</option>
+        <option value="OVO">OVO</option>
+      </select>
+
+      <button type="submit">Top Up Sekarang</button>
+    </form>
+
+    <div id="result" style="margin-top:1rem;"></div>
+  </div>
+
+  <script>
+    async function fetchGames() {
+      const res = await fetch('http://localhost:5000/api/games');
+      const data = await res.json();
+      const gameSelect = document.getElementById('game_id');
+      data.forEach(game => {
+        const opt = document.createElement('option');
+        opt.value = game.id;
+        opt.textContent = game.name;
+        gameSelect.appendChild(opt);
+      });
+    }
+
+    fetchGames();
+
+    document.getElementById('topupForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const payload = {
+        user_id: document.getElementById('user_id').value,
+        game_id: document.getElementById('game_id').value,
+        nominal: document.getElementById('nominal').value,
+        method: document.getElementById('method').value
+      };
+
+      const res = await fetch('http://localhost:5000/api/topup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+      document.getElementById('result').innerHTML = `
+        <p>Status: ${result.message}</p>
+        <a href="${result.data.checkout_url}" target="_blank">Bayar Sekarang</a>
+      `;
+    });
+  </script>
+</body>
+</html>
